@@ -1,5 +1,5 @@
 class SelectorCalculator {
-  private document: Document | ShadowRoot;
+  private readonly document: Document | ShadowRoot;
 
   constructor(document: Document | ShadowRoot) {
     this.document = document;
@@ -36,7 +36,7 @@ class SelectorCalculator {
     let index = 1;
     for (const element of elements) {
       const name = element.tagName.toLowerCase();
-      element.setAttribute('_selector', selector + ' > ' + name + ':nth-child(' + index + ')');
+      element.setAttribute('_selector', `${selector} > ${name}:nth-child('${index}')`);
       index++;
     }
   }
