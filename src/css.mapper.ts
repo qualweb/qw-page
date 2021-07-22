@@ -1,4 +1,5 @@
-import { CSSProperties, CSSProperty, PseudoSelectorProperty, QWElement } from '@qualweb/qw-element';
+import { CSSProperties, CSSProperty, PseudoSelectorProperty } from '@qualweb/qw-element';
+import QWElementNode from './nodes/qw-element-node';
 
 class CSSMapper {
   private readonly pseudoSelectors = [
@@ -28,13 +29,13 @@ class CSSMapper {
     'selection'
   ];
   private readonly document: Document | ShadowRoot;
-  private readonly elementsCSSRules = new Map<Element, CSSProperties>();
+  private readonly elementsCSSRules = new Map<Node, CSSProperties>();
 
   constructor(document: Document | ShadowRoot) {
     this.document = document;
   }
 
-  public map(): Map<Element, CSSProperties> {
+  public map(): Map<Node, CSSProperties> {
     this.mapExternalStylesheets();
     this.mapHeadStyles();
     this.mapInlineStyles();
@@ -62,9 +63,9 @@ class CSSMapper {
       const rules = this.getCSSRules(style.sheet);
       for (const rule of rules || []) {
         if (rule.type === 1) {
-          this.mapNormalCSSRule(<CSSStyleRule>rule, undefined, 'head', new QWElement(style).getElementSelector());
+          this.mapNormalCSSRule(<CSSStyleRule>rule, undefined, 'head', new QWElementNode(style).getElementSelector());
         } else if (rule.type === 4) {
-          this.mapMediaCSSRule(<CSSMediaRule>rule, 'head', new QWElement(style).getElementSelector());
+          this.mapMediaCSSRule(<CSSMediaRule>rule, 'head', new QWElementNode(style).getElementSelector());
         }
       }
     }
@@ -86,7 +87,7 @@ class CSSMapper {
             undefined,
             undefined,
             'inline',
-            new QWElement(element).getElementSelector() || ''
+            new QWElementNode(element).getElementSelector() || ''
           );
         } else {
           this.createElementCSSMapping(
@@ -95,7 +96,7 @@ class CSSMapper {
             undefined,
             undefined,
             'inline',
-            new QWElement(element).getElementSelector() || ''
+            new QWElementNode(element).getElementSelector() || ''
           );
         }
       }

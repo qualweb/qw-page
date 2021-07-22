@@ -1,8 +1,15 @@
-abstract class QWNode {
-  protected readonly node: Node;
+import QWCommentNode from './qw-comment-node';
+import QWElementNode from './qw-element-node';
+import QWTextNode from './qw-text-node';
+import { CSSProperties } from '@qualweb/qw-element';
 
-  constructor(node: Node) {
+class QWNode {
+  protected readonly node: Node;
+  protected readonly elementsCSSRules?: Map<Node, CSSProperties>;
+
+  constructor(node: Node, elementsCSSRules?: Map<Node, CSSProperties>) {
     this.node = node;
+    this.elementsCSSRules = elementsCSSRules;
   }
 
   public getType(): string {
@@ -27,6 +34,86 @@ abstract class QWNode {
       }
     });
     return hasText;
+  }
+
+  public isHTMLElement(): boolean {
+    return this.node instanceof HTMLElement;
+  }
+
+  public previousSibling(): QWElementNode | QWTextNode | QWCommentNode | null {
+    const sibling = this.node.previousSibling;
+    if (sibling) {
+      if (sibling.nodeType === 1) {
+        return this.convertToQWElementNode(<Element>sibling);
+      } else if (sibling.nodeType === 3) {
+        return this.convertToQWTextNode(sibling);
+      } else if (sibling.nodeType === 8) {
+        return this.convertToQWCommentNode(sibling);
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+  }
+
+  public nextSibling(): QWElementNode | QWTextNode | QWCommentNode | null {
+    const sibling = this.node.nextSibling;
+    if (sibling) {
+      if (sibling.nodeType === 1) {
+        return this.convertToQWElementNode(<Element>sibling);
+      } else if (sibling.nodeType === 3) {
+        return this.convertToQWTextNode(sibling);
+      } else if (sibling.nodeType === 8) {
+        return this.convertToQWCommentNode(sibling);
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+  }
+
+  public getParentNode(): QWNode | null {
+    if (this.node.parentNode) {
+      return this.convertToQWNode(this.node.parentNode);
+    } else {
+      return null;
+    }
+  }
+
+  private convertToQWNode(node: Node): QWNode {
+    if (node instanceof Element) {
+      this.addCSSRulesPropertyToElement(node);
+    }
+    return new QWNode(node, this.elementsCSSRules);
+  }
+
+  protected convertAllToQWElementNode(elements: NodeListOf<Element>): Array<QWElementNode> {
+    const list = new Array<QWElementNode>();
+    elements.forEach((element: Element) => {
+      list.push(this.convertToQWElementNode(element));
+    });
+    return list;
+  }
+
+  protected convertToQWElementNode(element: Element): QWElementNode {
+    this.addCSSRulesPropertyToElement(element);
+    return new QWElementNode(element, this.elementsCSSRules);
+  }
+
+  private addCSSRulesPropertyToElement(element: Element): void {
+    if (this.elementsCSSRules?.has(element)) {
+      element.setAttribute('_cssRules', 'true');
+    }
+  }
+
+  private convertToQWTextNode(node: ChildNode): QWTextNode {
+    return new QWTextNode(node, this.elementsCSSRules);
+  }
+
+  private convertToQWCommentNode(node: ChildNode): QWCommentNode {
+    return new QWCommentNode(node, this.elementsCSSRules);
   }
 }
 
