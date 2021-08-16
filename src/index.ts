@@ -258,6 +258,6 @@ class QWPage {
   }
 }
 
-//window.qwPage = new QWPage(document, true);
+window.qwPage = new QWPage(document, true);
 
 export { QWPage };

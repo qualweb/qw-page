@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.0-alpha2] - 16/08/2021
+
+### Added
+
+- initialization for QWPage
+
 ## [0.3.0-alpha] - 16/08/2021
 
 ### Removed
