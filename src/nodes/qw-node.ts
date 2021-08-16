@@ -1,11 +1,11 @@
 import QWCommentNode from './qw-comment-node';
 import QWElementNode from './qw-element-node';
 import QWTextNode from './qw-text-node';
-import { CSSProperties } from '@qualweb/qw-element';
+import { CSSProperties } from '@qualweb/qw-page';
 
 class QWNode {
-  protected readonly node: Node;
-  protected readonly elementsCSSRules?: Map<Node, CSSProperties>;
+  node: Node;
+  elementsCSSRules?: Map<Node, CSSProperties>;
 
   constructor(node: Node, elementsCSSRules?: Map<Node, CSSProperties>) {
     this.node = node;
@@ -40,7 +40,7 @@ class QWNode {
     return this.node instanceof HTMLElement;
   }
 
-  public previousSibling(): QWElementNode | QWTextNode | QWCommentNode | null {
+  public previousSibling(): QWElementNode | QWTextNode | QWCommentNode | QWNode | null {
     const sibling = this.node.previousSibling;
     if (sibling) {
       if (sibling.nodeType === 1) {
@@ -50,14 +50,14 @@ class QWNode {
       } else if (sibling.nodeType === 8) {
         return this.convertToQWCommentNode(sibling);
       } else {
-        return null;
+        return this.convertToQWNode(sibling);
       }
     } else {
       return null;
     }
   }
 
-  public nextSibling(): QWElementNode | QWTextNode | QWCommentNode | null {
+  public nextSibling(): QWElementNode | QWTextNode | QWCommentNode | QWNode | null {
     const sibling = this.node.nextSibling;
     if (sibling) {
       if (sibling.nodeType === 1) {
@@ -67,7 +67,7 @@ class QWNode {
       } else if (sibling.nodeType === 8) {
         return this.convertToQWCommentNode(sibling);
       } else {
-        return null;
+        return this.convertToQWNode(sibling);
       }
     } else {
       return null;
@@ -82,14 +82,14 @@ class QWNode {
     }
   }
 
-  private convertToQWNode(node: Node): QWNode {
+  convertToQWNode(node: Node): QWNode {
     if (node instanceof Element) {
       this.addCSSRulesPropertyToElement(node);
     }
     return new QWNode(node, this.elementsCSSRules);
   }
 
-  protected convertAllToQWElementNode(elements: NodeListOf<Element>): Array<QWElementNode> {
+  convertAllToQWElementNode(elements: NodeListOf<Element>): Array<QWElementNode> {
     const list = new Array<QWElementNode>();
     elements.forEach((element: Element) => {
       list.push(this.convertToQWElementNode(element));
@@ -97,22 +97,22 @@ class QWNode {
     return list;
   }
 
-  protected convertToQWElementNode(element: Element): QWElementNode {
+  convertToQWElementNode(element: Element): QWElementNode {
     this.addCSSRulesPropertyToElement(element);
     return new QWElementNode(element, this.elementsCSSRules);
   }
 
-  private addCSSRulesPropertyToElement(element: Element): void {
+  addCSSRulesPropertyToElement(element: Element): void {
     if (this.elementsCSSRules?.has(element)) {
       element.setAttribute('_cssRules', 'true');
     }
   }
 
-  private convertToQWTextNode(node: ChildNode): QWTextNode {
+  convertToQWTextNode(node: ChildNode): QWTextNode {
     return new QWTextNode(node, this.elementsCSSRules);
   }
 
-  private convertToQWCommentNode(node: ChildNode): QWCommentNode {
+  convertToQWCommentNode(node: ChildNode): QWCommentNode {
     return new QWCommentNode(node, this.elementsCSSRules);
   }
 }

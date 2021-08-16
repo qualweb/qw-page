@@ -1,14 +1,8 @@
 import QWNode from './qw-node';
-import {
-  CSSProperties,
-  CSSProperty,
-  MediaProperties,
-  MediaProperty,
-  PseudoSelectorProperty
-} from '@qualweb/qw-element';
-
-class QWElementNode extends QWNode {
-  private selector: string | undefined;
+import { CSSProperties, CSSProperty, MediaProperties, MediaProperty, PseudoSelectorProperty } from '@qualweb/qw-page';
+import { QWElementNode as QWElementNodeInterface } from '@qualweb/qw-page';
+class QWElementNode extends QWNode implements QWElementNodeInterface {
+  selector: string | undefined;
 
   constructor(node: Node | Element, elementsCSSRules?: Map<Node, CSSProperties>) {
     super(node, elementsCSSRules);
@@ -94,6 +88,12 @@ class QWElementNode extends QWNode {
     return undefined;
   }
 
+  public getComputedStyle(property: string, pseudoStyle: string | null): string {
+    const element = <Element>this.node;
+    const styles = getComputedStyle(element, pseudoStyle);
+    return styles.getPropertyValue(property);
+  }
+
   public getText(): string | null {
     const element = <Element>this.node;
     if (element.shadowRoot) {
@@ -132,6 +132,24 @@ class QWElementNode extends QWNode {
     return hasTextNode;
   }
 
+  public hasVisualTextContent(): boolean {
+    if (!this.isVisible()) {
+      return false;
+    } else if (this.hasNonEmptyTextNode()) {
+      return true;
+    } else {
+      const element = <Element>this.node;
+      let hasVisualTextContent = false;
+      for (const child of element.children) {
+        hasVisualTextContent ||= this.convertToQWElementNode(child).hasVisualTextContent();
+        if (hasVisualTextContent) {
+          break;
+        }
+      }
+      return hasVisualTextContent;
+    }
+  }
+
   public hasAttributes(): boolean {
     const element = <Element>this.node;
     return element.getAttributeNames().length > 0;
@@ -145,6 +163,19 @@ class QWElementNode extends QWNode {
   public hasChildren(): boolean {
     const element = <Element>this.node;
     return element.children.length > 0;
+  }
+
+  public getChildren(): Array<QWElementNode> {
+    const element = <Element>this.node;
+    const list = new Array<QWElementNode>();
+    const children = element.children;
+    for (let i = 0; i < children.length; i++) {
+      const child = children.item(i);
+      if (child) {
+        list.push(this.convertToQWElementNode(child));
+      }
+    }
+    return list;
   }
 
   public hasChild(childName: string): boolean {
@@ -209,17 +240,17 @@ class QWElementNode extends QWNode {
     return attributes;
   }
 
-  public getElementAttributesName(): Array<string> {
+  public getAttributeNames(): Array<string> {
     const element = <Element>this.node;
     return element.getAttributeNames();
   }
 
-  public setElementAttribute(attribute: string, value: string): void {
+  public setAttribute(attribute: string, value: string): void {
     const element = <Element>this.node;
     element.setAttribute(attribute, value);
   }
 
-  public querySelector(selector: string): QWElementNode | null {
+  public find(selector: string): QWElementNode | null {
     const element = <Element>this.node;
     const result = element.querySelector(selector);
     if (result) {
@@ -229,12 +260,12 @@ class QWElementNode extends QWNode {
     }
   }
 
-  public querySelectorAll(selector: string): Array<QWElementNode> {
+  public findAll(selector: string): Array<QWElementNode> {
     const element = <Element>this.node;
     return this.convertAllToQWElementNode(element.querySelectorAll(selector));
   }
 
-  public shadowQuerySelector(selector: string): QWElementNode | null {
+  public shadowFind(selector: string): QWElementNode | null {
     const element = <Element>this.node;
     const shadowRoot = element.shadowRoot;
     if (shadowRoot) {
@@ -246,7 +277,7 @@ class QWElementNode extends QWNode {
     return null;
   }
 
-  public shadowQuerySelectorAll(selector: string): Array<QWElementNode> {
+  public shadowFindAll(selector: string): Array<QWElementNode> {
     const element = <Element>this.node;
     const shadowRoot = element.shadowRoot;
     if (shadowRoot) {
@@ -289,19 +320,6 @@ class QWElementNode extends QWNode {
     return count;
   }
 
-  public getChildren(): Array<QWElementNode> {
-    const element = <Element>this.node;
-    const list = new Array<QWElementNode>();
-    const children = element.children;
-    for (let i = 0; i < children.length; i++) {
-      const child = children.item(i);
-      if (child) {
-        list.push(this.convertToQWElementNode(child));
-      }
-    }
-    return list;
-  }
-
   public getChildTextContent(childName: string): string | null {
     const element = <Element>this.node;
     const children = element.children;
@@ -340,10 +358,66 @@ class QWElementNode extends QWNode {
     return result;
   }
 
-  public getElementProperty(property: string): unknown {
+  public getProperty(property: string): unknown {
     const element = <Element>this.node;
     //@ts-ignore
     return element[property];
+  }
+
+  public getMediaDuration(): number | null {
+    if (this.node instanceof HTMLMediaElement) {
+      return (<HTMLMediaElement>this.node).duration;
+    } else {
+      return null;
+    }
+  }
+
+  public hasMediaControls(): boolean | null {
+    if (this.node instanceof HTMLMediaElement) {
+      return (<HTMLMediaElement>this.node).controls;
+    } else {
+      return null;
+    }
+  }
+
+  public isMediaMuted(): boolean | null {
+    if (this.node instanceof HTMLMediaElement) {
+      return (<HTMLMediaElement>this.node).muted;
+    } else {
+      return null;
+    }
+  }
+
+  public isMediaWithAutoplay(): boolean | null {
+    if (this.node instanceof HTMLMediaElement) {
+      return (<HTMLMediaElement>this.node).autoplay;
+    } else {
+      return null;
+    }
+  }
+
+  public videoHasAudio(): boolean {
+    return window.DomUtils.objectElementIsNonText(this);
+  }
+
+  public getScrollHeight(): number {
+    const element = <Element>this.node;
+    return element.scrollHeight;
+  }
+
+  public getScrollWidth(): number {
+    const element = <Element>this.node;
+    return element.scrollWidth;
+  }
+
+  public getClientHeight(): number {
+    const element = <Element>this.node;
+    return element.clientHeight;
+  }
+
+  public getClientWidth(): number {
+    const element = <Element>this.node;
+    return element.clientWidth;
   }
 
   public getTagName(): string {
@@ -351,7 +425,7 @@ class QWElementNode extends QWNode {
     return element.tagName.toLowerCase();
   }
 
-  public toString(withText: boolean, fullElement: boolean): string {
+  public toString(withText = true, fullElement = false): string {
     const element = <Element>this.node;
     const cssRules = element.getAttribute('_cssRules');
     const selector = element.getAttribute('_selector');
@@ -486,7 +560,115 @@ class QWElementNode extends QWNode {
     return element.getBoundingClientRect();
   }
 
-  public getElementSelector(): string {
+  public isVisible(): boolean {
+    return window.DomUtils.isElementVisible(this);
+  }
+
+  public isHidden(): boolean {
+    return window.DomUtils.isElementHidden(this);
+  }
+
+  public isInTheAccessibilityTree(): boolean {
+    return window.AccessibilityUtils.isElementInAT(this);
+  }
+
+  public isWidget(): boolean {
+    return window.AccessibilityUtils.isElementWidget(this);
+  }
+
+  public isDescendantOf(names: Array<string>, roles: Array<string>): boolean {
+    return window.DomUtils.isElementADescendantOf(this, names, roles);
+  }
+
+  public isDescendantOfExplicitRole(names: Array<string>, roles: Array<string>): boolean {
+    return window.DomUtils.isElementADescendantOfExplicitRole(this, names, roles);
+  }
+
+  public allowsNameFromContent(): boolean {
+    return window.AccessibilityUtils.allowsNameFromContent(this);
+  }
+
+  public getAccessibleName(): string | undefined {
+    return window.AccessibilityUtils.getAccessibleName(this);
+  }
+
+  public getAccessibleNameSVG(): string | undefined {
+    return window.AccessibilityUtils.getAccessibleNameSVG(this);
+  }
+
+  public getAccessibleNameSelector(): Array<string> | undefined {
+    return window.AccessibilityUtils.getAccessibleNameSelector(this);
+  }
+
+  public getRole(): string | null {
+    return window.AccessibilityUtils.getElementRole(this);
+  }
+
+  public getImplicitRole(accessibleName: string): string | null {
+    return window.AccessibilityUtils.getImplicitRole(this, accessibleName);
+  }
+
+  public getValidExplicitRole(): string | null {
+    return window.AccessibilityUtils.getElementValidExplicitRole(this);
+  }
+
+  public hasGlobalARIAPropertyOrAttribute(): boolean {
+    return window.AccessibilityUtils.elementHasGlobalARIAPropertyOrAttribute(this);
+  }
+
+  public hasValidRole(): boolean {
+    return window.AccessibilityUtils.elementHasValidRole(this);
+  }
+
+  public getAriaOwner(): QWElementNode | null {
+    return window.AccessibilityUtils.getAriaOwner(this);
+  }
+
+  public getLinkContext(): Array<string> {
+    return window.AccessibilityUtils.getLinkContext(this);
+  }
+
+  public getOwnerElement(): QWElementNode | null {
+    return window.AccessibilityUtils.getOwnerElement(this);
+  }
+
+  public getOwnedElements(): Array<QWElementNode> {
+    return window.AccessibilityUtils.getOwnedElements(this);
+  }
+
+  public getValueFromEmbeddedControl(): string {
+    return window.AccessibilityUtils.getValueFromEmbeddedControl(this);
+  }
+
+  public isDataTable(): boolean {
+    return window.AccessibilityUtils.isDataTable(this);
+  }
+
+  public isChildPresentational(): boolean {
+    return window.AccessibilityUtils.isElementChildPresentational(this);
+  }
+
+  public isOfTypeControl(): boolean {
+    return window.AccessibilityUtils.isElementControl(this);
+  }
+
+  public isFocusable(): boolean {
+    return window.AccessibilityUtils.isElementFocusable(this);
+  }
+
+  public isReferencedByAriaLabel(): boolean {
+    return window.AccessibilityUtils.isElementReferencedByAriaLabel(this);
+  }
+
+  public isFocused(): boolean {
+    return window.AccessibilityUtils.isFocusableBrowser(this);
+  }
+
+  public isPartOfSequentialFocusNavigation(): boolean {
+    return window.AccessibilityUtils.isPartOfSequentialFocusNavigation(this);
+  }
+
+  public getSelector(): string {
     if (this.selector) {
       const element = <Element>this.node;
       if (element.tagName.toLowerCase() === 'html') {
@@ -521,7 +703,7 @@ class QWElementNode extends QWNode {
     }
   }
 
-  private getSelfLocationInParent(element: Element): string {
+  getSelfLocationInParent(element: Element): string {
     let selector = '';
 
     if (element.tagName.toLowerCase() === 'body' || element.tagName.toLowerCase() === 'head') {
@@ -543,7 +725,7 @@ class QWElementNode extends QWNode {
     return selector;
   }
 
-  private noParentScrolled(offset: number): boolean {
+  noParentScrolled(offset: number): boolean {
     const element = <Element>this.node;
     let parent = element.parentElement;
     while (parent && parent.nodeName.toLowerCase() !== 'html') {

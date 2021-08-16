@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0-alpha] - 16/08/2021
+
+### Removed
+
+- qw-element dependency
+
+### Added
+
+- qw-node abstraction
+- qw-element-node abstraction
+- qw-text-node abstraction
+- qw-comment-node abstraction
+
 ## [0.2.10] - 19/07/2021
 
 ### Updated

@@ -1,4 +1,4 @@
-import { CSSProperties } from '@qualweb/qw-element';
+import { CSSProperties } from '@qualweb/qw-page';
 import Cache from './cache.object';
 import CSSMapper from './css.mapper';
 import QWElementNode from './nodes/qw-element-node';
@@ -30,14 +30,14 @@ class QWPage {
     return new QWElementNode(element);
   }
 
-  public processShadowDom(): void {
+  private processShadowDom(): void {
     const listElements = this.document.querySelectorAll('*');
 
     for (const element of listElements ?? []) {
       if (element.shadowRoot !== null) {
         element.innerHTML = '';
         const shadowRoot = new QWElementNode(element);
-        const selector = shadowRoot.getElementSelector();
+        const selector = shadowRoot.toString();
         const shadowPage = new QWPage(element.shadowRoot, true);
         this.extraDocuments.set(selector, shadowPage);
       }
@@ -53,7 +53,7 @@ class QWPage {
         const contentWindow = iframeQW.getContentFrame();
         const frame = contentWindow;
         if (frame && frame.defaultView) {
-          const selector = iframeQW.getElementSelector();
+          const selector = iframeQW.toString();
           const iframePage = new QWPage(frame, true);
           this.extraDocuments.set(selector, iframePage);
         }
@@ -71,7 +71,7 @@ class QWPage {
 
   private addIframeAttribute(elements: Array<QWElementNode>, selector: string): void {
     for (const element of elements) {
-      element.setElementAttribute('_documentSelector', selector);
+      element.setAttribute('_documentSelector', selector);
     }
   }
 
@@ -91,13 +91,13 @@ class QWPage {
     return this.url;
   }
 
-  private getElementFromDocument(selector: string): QWElementNode | null {
+  private findFromDocument(selector: string): QWElementNode | null {
     const element = this.document.querySelector(selector);
     this.addCSSRulesPropertyToElement(element);
     return element ? new QWElementNode(element, this.elementsCSSRules) : null;
   }
 
-  private getElementsFromDocument(selector: string): Array<QWElementNode> {
+  private findAllFromDocument(selector: string): Array<QWElementNode> {
     const elements = this.document.querySelectorAll(selector);
     const qwList = new Array<QWElementNode>();
 
@@ -109,11 +109,7 @@ class QWPage {
     return qwList;
   }
 
-  public querySelector(
-    selector: string,
-    specificDocument?: QWElementNode,
-    documentSelector?: string
-  ): QWElementNode | null {
+  public find(selector: string, specificDocument?: QWElementNode, documentSelector?: string): QWElementNode | null {
     let element: QWElementNode | null = null;
     let iframeSelector: string | null | undefined = null;
     if (specificDocument || !!documentSelector) {
@@ -125,18 +121,18 @@ class QWPage {
       if (!!iframeSelector && !!this.extraDocuments.has(iframeSelector)) {
         const iframePage = this.extraDocuments.get(iframeSelector);
         if (iframePage) {
-          element = iframePage.querySelector(selector, specificDocument);
+          element = iframePage.find(selector, specificDocument);
         }
       } else {
-        element = this.getElementFromDocument(selector);
+        element = this.findFromDocument(selector);
       }
     } else {
-      element = this.getElementFromDocument(selector);
+      element = this.findFromDocument(selector);
       if (!element) {
         //search iframes
         this.extraDocuments.forEach((iframe: QWPage, key: string) => {
           if (!element) {
-            element = iframe.querySelector(selector);
+            element = iframe.find(selector);
             iframeSelector = key;
           }
         });
@@ -161,11 +157,7 @@ class QWPage {
     return element;
   }
 
-  public querySelectorAll(
-    selector: string,
-    specificDocument?: QWElementNode,
-    documentSelector?: string
-  ): Array<QWElementNode> {
+  public findAll(selector: string, specificDocument?: QWElementNode, documentSelector?: string): Array<QWElementNode> {
     let iframeSelector;
     const elements = new Array<QWElementNode>();
     if (specificDocument || !!documentSelector) {
@@ -178,18 +170,18 @@ class QWPage {
       if (!!iframeSelector && !!this.extraDocuments.has(iframeSelector)) {
         const iframePage = this.extraDocuments.get(iframeSelector);
         if (iframePage) {
-          elements.push(...iframePage.querySelectorAll(selector, specificDocument));
+          elements.push(...iframePage.findAll(selector, specificDocument));
           this.addIframeAttribute(elements, iframeSelector);
         }
       } else {
-        elements.push(...this.getElementsFromDocument(selector));
+        elements.push(...this.findAllFromDocument(selector));
       }
     } else {
       // console.log(this.getElementsFromDocument(selector));
-      elements.push(...this.getElementsFromDocument(selector));
+      elements.push(...this.findAllFromDocument(selector));
       //search iframes
       this.extraDocuments.forEach((iframe: QWPage, key: string) => {
-        const iframeElements = iframe.querySelectorAll(selector);
+        const iframeElements = iframe.findAll(selector);
         this.addIframeAttribute(iframeElements, key);
         elements.push(...iframeElements);
       });
@@ -218,7 +210,7 @@ class QWPage {
     return element ? new QWElementNode(element, this.elementsCSSRules) : null;
   }
 
-  public getPageRootElement(): QWElementNode | null {
+  public getRootElement(): QWElementNode | null {
     if (this.document instanceof Document) {
       const documentElement = this.document.documentElement;
       this.addCSSRulesPropertyToElement(documentElement);
@@ -266,6 +258,6 @@ class QWPage {
   }
 }
 
-window.qwPage = new QWPage(document, true);
+//window.qwPage = new QWPage(document, true);
 
 export { QWPage };

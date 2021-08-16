@@ -1,5 +1,5 @@
 import QWNode from './qw-node';
-import { CSSProperties } from '@qualweb/qw-element';
+import { CSSProperties } from '@qualweb/qw-page';
 
 class QWTextNode extends QWNode {
   constructor(node: Node, elementsCSSRules?: Map<Node, CSSProperties>) {

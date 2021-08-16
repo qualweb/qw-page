@@ -1,4 +1,4 @@
-import { CSSProperties, CSSProperty, PseudoSelectorProperty } from '@qualweb/qw-element';
+import { CSSProperties, CSSProperty, PseudoSelectorProperty } from '@qualweb/qw-page';
 import QWElementNode from './nodes/qw-element-node';
 
 class CSSMapper {
@@ -63,9 +63,9 @@ class CSSMapper {
       const rules = this.getCSSRules(style.sheet);
       for (const rule of rules || []) {
         if (rule.type === 1) {
-          this.mapNormalCSSRule(<CSSStyleRule>rule, undefined, 'head', new QWElementNode(style).getElementSelector());
+          this.mapNormalCSSRule(<CSSStyleRule>rule, undefined, 'head', new QWElementNode(style).toString());
         } else if (rule.type === 4) {
-          this.mapMediaCSSRule(<CSSMediaRule>rule, 'head', new QWElementNode(style).getElementSelector());
+          this.mapMediaCSSRule(<CSSMediaRule>rule, 'head', new QWElementNode(style).toString());
         }
       }
     }
@@ -87,7 +87,7 @@ class CSSMapper {
             undefined,
             undefined,
             'inline',
-            new QWElementNode(element).getElementSelector() || ''
+            new QWElementNode(element).toString() || ''
           );
         } else {
           this.createElementCSSMapping(
@@ -96,7 +96,7 @@ class CSSMapper {
             undefined,
             undefined,
             'inline',
-            new QWElementNode(element).getElementSelector() || ''
+            new QWElementNode(element).toString() || ''
           );
         }
       }
