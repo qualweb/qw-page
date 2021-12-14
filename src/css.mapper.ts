@@ -1,5 +1,5 @@
 import { CSSProperties, CSSProperty, PseudoSelectorProperty } from '@qualweb/qw-page';
-import QWElementNode from './nodes/qw-element-node';
+import { QWElementNode } from './nodes/qw-nodes';
 
 class CSSMapper {
   private readonly pseudoSelectors = [

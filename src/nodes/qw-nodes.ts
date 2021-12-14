@@ -1,11 +1,96 @@
-import QWNode from './qw-node';
 import { CSSProperties, CSSProperty, MediaProperties, MediaProperty, PseudoSelectorProperty } from '@qualweb/qw-page';
-import { QWElementNode as QWElementNodeInterface } from '@qualweb/qw-page';
-class QWElementNode extends QWNode implements QWElementNodeInterface {
+
+class QWNode {
+  node: Node;
+  elementsCSSRules?: Map<Node, CSSProperties>;
+
+  constructor(node: Node, elementsCSSRules?: Map<Node, CSSProperties>) {
+    this.node = node;
+    this.elementsCSSRules = elementsCSSRules;
+  }
+
+  public getType(): string {
+    return this.node.nodeType === 1
+      ? 'tag'
+      : this.node.nodeType === 2
+      ? 'attribute'
+      : this.node.nodeType === 3
+      ? 'text'
+      : 'comment';
+  }
+
+  public hasChildNodes(): boolean {
+    return this.node.hasChildNodes();
+  }
+
+  public hasTextNode(): boolean {
+    let hasText = false;
+    this.node.childNodes.forEach((child: ChildNode) => {
+      if (child.nodeType === 3 && child.textContent?.trim() !== '') {
+        hasText = true;
+      }
+    });
+    return hasText;
+  }
+
+  public isHTMLElement(): boolean {
+    return this.node instanceof HTMLElement;
+  }
+
+  public previousSibling(): QWNode | null {
+    const sibling = this.node.previousSibling;
+    if (sibling) {
+      return this.convertToQWNode(sibling);
+    } else {
+      return null;
+    }
+  }
+
+  public nextSibling(): QWNode | null {
+    const sibling = this.node.nextSibling;
+    if (sibling) {
+      return this.convertToQWNode(sibling);
+    } else {
+      return null;
+    }
+  }
+
+  public getParentNode(): QWNode | null {
+    if (this.node.parentNode) {
+      return this.convertToQWNode(this.node.parentNode);
+    } else {
+      return null;
+    }
+  }
+
+  convertToQWNode(node: Node): QWNode {
+    return new QWNode(node, this.elementsCSSRules);
+  }
+
+  toQWElementNode(): QWElementNode {
+    if (this.node instanceof Element) {
+      return new QWElementNode(this.node, this.elementsCSSRules);
+    }
+    throw new Error(`Node of type ${this.getType()} can't be converted to QWElement.`);
+  }
+
+  toQWTextNode(): QWTextNode {
+    return new QWTextNode(this.node, this.elementsCSSRules);
+  }
+
+  toQWCommentNode(): QWCommentNode {
+    return new QWCommentNode(this.node, this.elementsCSSRules);
+  }
+}
+
+class QWElementNode extends QWNode {
   selector: string | undefined;
 
   constructor(node: Node | Element, elementsCSSRules?: Map<Node, CSSProperties>) {
     super(node, elementsCSSRules);
+    if (node instanceof Element) {
+      this.addCSSRulesPropertyToElement(node);
+    }
     const selector = (<Element>node).getAttribute('_selector');
     if (selector) {
       this.selector = selector;
@@ -96,11 +181,18 @@ class QWElementNode extends QWNode implements QWElementNodeInterface {
 
   public getText(): string | null {
     const element = <Element>this.node;
+
+    let text = element.textContent;
+
     if (element.shadowRoot) {
-      return element.shadowRoot.textContent;
-    } else {
-      return element.textContent;
+      if (text) {
+        text += element.shadowRoot.textContent ?? '';
+      } else {
+        text = element.shadowRoot.textContent;
+      }
     }
+
+    return text;
   }
 
   public getOwnText(): string | null {
@@ -117,6 +209,18 @@ class QWElementNode extends QWNode implements QWElementNodeInterface {
       }
     });
 
+    if (element.shadowRoot) {
+      element.shadowRoot.childNodes.forEach((child: ChildNode) => {
+        if (child.nodeType === 3 && child.textContent && child.textContent.trim() !== '') {
+          if (text === null) {
+            text = child.textContent.trim();
+          } else {
+            text += child.textContent.trim();
+          }
+        }
+      });
+    }
+
     return text;
   }
 
@@ -129,6 +233,13 @@ class QWElementNode extends QWNode implements QWElementNodeInterface {
         hasTextNode = true;
       }
     });
+    if (!hasTextNode && element.shadowRoot) {
+      element.shadowRoot.childNodes.forEach((child: ChildNode) => {
+        if (child.nodeType === 3 && child.textContent && child.textContent.trim() !== '') {
+          hasTextNode = true;
+        }
+      });
+    }
     return hasTextNode;
   }
 
@@ -199,6 +310,19 @@ class QWElementNode extends QWNode implements QWElementNodeInterface {
     } else {
       return null;
     }
+    /*const element = <Element>this.node;
+    let parent = element.parentElement;
+    if (!parent) {
+      const context = element.getAttribute('_documentSelector');
+      if (context) {
+        parent = document.querySelector(context);
+      }
+    }
+    if (parent) {
+      return this.convertToQWElementNode(parent);
+    } else {
+      return null;
+    }*/
   }
 
   public hasParent(parentName: string): boolean {
@@ -683,7 +807,7 @@ class QWElementNode extends QWNode implements QWElementNodeInterface {
       let parent = element.parentElement;
       while (parent) {
         parents.unshift(this.getSelfLocationInParent(parent));
-        parent = parent['parentElement'];
+        parent = parent.parentElement;
       }
       if (parents.length > 0) {
         selector += parents.join(' > ');
@@ -694,8 +818,9 @@ class QWElementNode extends QWNode implements QWElementNodeInterface {
 
       const documentSelector = element.getAttribute('_documentSelector');
       if (documentSelector) {
-        selector = documentSelector + selector;
+        selector = documentSelector + ' > ' + selector;
       }
+      element.setAttribute('_selector', selector);
       this.selector = selector;
       return selector;
     } else {
@@ -706,7 +831,11 @@ class QWElementNode extends QWNode implements QWElementNodeInterface {
   getSelfLocationInParent(element: Element): string {
     let selector = '';
 
-    if (element.tagName.toLowerCase() === 'body' || element.tagName.toLowerCase() === 'head') {
+    if (
+      element.tagName.toLowerCase() === 'html' ||
+      element.tagName.toLowerCase() === 'body' ||
+      element.tagName.toLowerCase() === 'head'
+    ) {
       return element.tagName.toLowerCase();
     }
 
@@ -714,13 +843,11 @@ class QWElementNode extends QWNode implements QWElementNodeInterface {
 
     let prev = element.previousElementSibling;
     while (prev) {
-      if (prev.tagName.toLowerCase() === element.tagName.toLowerCase()) {
-        sameEleCount++;
-      }
+      sameEleCount++;
       prev = prev.previousElementSibling;
     }
 
-    selector += `${element.tagName.toLowerCase()}:nth-of-type(${sameEleCount + 1})`;
+    selector += `${element.tagName.toLowerCase()}:nth-child(${sameEleCount + 1})`;
 
     return selector;
   }
@@ -739,6 +866,49 @@ class QWElementNode extends QWNode implements QWElementNodeInterface {
     }
     return true;
   }
+
+  convertAllToQWElementNode(elements: NodeListOf<Element>): Array<QWElementNode> {
+    const list = new Array<QWElementNode>();
+    elements.forEach((element: Element) => {
+      list.push(this.convertToQWElementNode(element));
+    });
+    return list;
+  }
+
+  convertToQWElementNode(element: Element): QWElementNode {
+    this.addCSSRulesPropertyToElement(element);
+    return new QWElementNode(element, this.elementsCSSRules);
+  }
+
+  addCSSRulesPropertyToElement(element: Element): void {
+    if (this.elementsCSSRules?.has(element)) {
+      element.setAttribute('_cssRules', 'true');
+    }
+  }
 }
 
-export = QWElementNode;
+class QWCommentNode extends QWNode {
+  constructor(node: Node, elementsCSSRules?: Map<Node, CSSProperties>) {
+    super(node, elementsCSSRules);
+  }
+
+  public getData(): string | null {
+    return (<Comment>this.node).textContent;
+  }
+}
+
+class QWTextNode extends QWNode {
+  constructor(node: Node, elementsCSSRules?: Map<Node, CSSProperties>) {
+    super(node, elementsCSSRules);
+  }
+
+  public getText(): string | null {
+    return (<Text>this.node).textContent;
+  }
+
+  public getWholeText(): string {
+    return (<Text>this.node).wholeText;
+  }
+}
+
+export { QWNode, QWElementNode, QWTextNode, QWCommentNode };

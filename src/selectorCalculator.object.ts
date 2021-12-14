@@ -6,12 +6,25 @@ class SelectorCalculator {
   }
 
   public processElementSelector(): void {
-    const html = this.document.querySelector('html');
-    if (html) {
-      html.setAttribute('_selector', 'html');
-      const children = html.children;
-      if (children) {
-        this.processElementSelectorAux([...children]);
+    if (this.document instanceof Document) {
+      const html = this.document.querySelector('html');
+      if (html) {
+        html.setAttribute('_selector', 'html');
+        const children = html.children;
+        if (children.length > 0) {
+          this.processElementSelectorAux([...children]);
+        }
+      }
+    } else {
+      const elements = this.document.querySelectorAll('*');
+      let i = 1;
+      for (const element of elements ?? []) {
+        element.setAttribute('_selector', `${element.tagName.toLowerCase()}:nth-child(${i})`);
+        const children = element.children;
+        if (children.length > 0) {
+          this.processElementSelectorAux([...children]);
+        }
+        i++;
       }
     }
   }

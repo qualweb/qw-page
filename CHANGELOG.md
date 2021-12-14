@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.0-alpha3] - 14/12/2021
+
+### Fixed
+
+- known bugs
+
 ## [0.3.0-alpha2] - 16/08/2021
 
 ### Added

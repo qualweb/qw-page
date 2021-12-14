@@ -1,7 +1,7 @@
 import { CSSProperties } from '@qualweb/qw-page';
 import Cache from './cache.object';
 import CSSMapper from './css.mapper';
-import QWElementNode from './nodes/qw-element-node';
+import { QWNode, QWElementNode } from './nodes/qw-nodes';
 import SelectorCalculator from './selectorCalculator.object';
 
 class QWPage {
@@ -26,6 +26,10 @@ class QWPage {
     this.processShadowDom();
   }
 
+  public createQWNode(node: Node): QWNode {
+    return new QWNode(node);
+  }
+
   public createQWElementNode(element: Element): QWElementNode {
     return new QWElementNode(element);
   }
@@ -37,7 +41,7 @@ class QWPage {
       if (element.shadowRoot !== null) {
         element.innerHTML = '';
         const shadowRoot = new QWElementNode(element);
-        const selector = shadowRoot.toString();
+        const selector = shadowRoot.getSelector();
         const shadowPage = new QWPage(element.shadowRoot, true);
         this.extraDocuments.set(selector, shadowPage);
       }
@@ -53,7 +57,7 @@ class QWPage {
         const contentWindow = iframeQW.getContentFrame();
         const frame = contentWindow;
         if (frame && frame.defaultView) {
-          const selector = iframeQW.toString();
+          const selector = iframeQW.getSelector();
           const iframePage = new QWPage(frame, true);
           this.extraDocuments.set(selector, iframePage);
         }
@@ -167,7 +171,7 @@ class QWPage {
         iframeSelector = documentSelector;
       }
 
-      if (!!iframeSelector && !!this.extraDocuments.has(iframeSelector)) {
+      if (!!iframeSelector && this.extraDocuments.has(iframeSelector)) {
         const iframePage = this.extraDocuments.get(iframeSelector);
         if (iframePage) {
           elements.push(...iframePage.findAll(selector, specificDocument));
