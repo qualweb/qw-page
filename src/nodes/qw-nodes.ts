@@ -428,17 +428,26 @@ class QWElementNode extends QWNode {
     }
   }
 
-  public getNumberOfSiblingsWithTheSameTag(tag: string): number {
+  public getNumberOfSiblingsWithTheSameTag(): number {
     const element = <Element>this.node;
 
     let count = 1;
     let nextSibling = element.nextElementSibling;
 
     while (nextSibling) {
-      if (nextSibling.tagName.toLowerCase() === tag.toLowerCase().trim()) {
+      if (nextSibling.tagName.toLowerCase() === element.tagName.toLowerCase().trim()) {
         count++;
       }
       nextSibling = nextSibling.nextElementSibling;
+    }
+
+    let previousSibling = element.previousElementSibling;
+
+    while (previousSibling) {
+      if (previousSibling.tagName.toLowerCase() === element.tagName.toLowerCase().trim()) {
+        count++;
+      }
+      previousSibling = previousSibling.previousElementSibling;
     }
 
     return count;
@@ -550,13 +559,23 @@ class QWElementNode extends QWNode {
   }
 
   public toString(withText = true, fullElement = false): string {
-    const element = <Element>this.node;
+    const element = <Element>this.node.cloneNode(true);
     const cssRules = element.getAttribute('_cssRules');
     const selector = element.getAttribute('_selector');
     const documentSelector = element.getAttribute('_documentSelector');
     element.removeAttribute('_cssRules');
     element.removeAttribute('_selector');
     element.removeAttribute('_documentSelector');
+
+    if (element.tagName.toLowerCase() === 'html' || element.tagName.toLowerCase() === 'head') {
+      const scripts = element.querySelectorAll(
+        '#qw-script-page, #qw-script-util, #qw-script-act, #qw-script-wcag, #qw-script-bp, #qw-script-counter'
+      );
+
+      for (const script of scripts ?? []) {
+        script.remove();
+      }
+    }
 
     let result;
     if (fullElement) {
@@ -728,7 +747,7 @@ class QWElementNode extends QWNode {
     return window.AccessibilityUtils.getElementRole(this);
   }
 
-  public getImplicitRole(accessibleName: string): string | null {
+  public getImplicitRole(accessibleName: string | undefined): string | null {
     return window.AccessibilityUtils.getImplicitRole(this, accessibleName);
   }
 

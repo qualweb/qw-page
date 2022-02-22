@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.0-alpha4] - 22/2/2022
+
+### Updated
+
+- dependencies
+
 ## [0.3.0-alpha3] - 14/12/2021
 
 ### Fixed
