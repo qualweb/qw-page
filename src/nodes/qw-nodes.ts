@@ -389,8 +389,7 @@ class QWElementNode extends QWNode {
     return this.convertAllToQWElementNode(element.querySelectorAll(selector));
   }
 
-  //TODO: uncomment next build
-  /*public findVisible(selector: string): QWElementNode | null {
+  public findVisible(selector: string): QWElementNode | null {
     const elements = this.findAllVisible(selector);
     return elements[0] ?? null;
   }
@@ -406,7 +405,7 @@ class QWElementNode extends QWNode {
     }
 
     return elements;
-  }*/
+  }
 
   public shadowFind(selector: string): QWElementNode | null {
     const element = <Element>this.node;
@@ -438,8 +437,7 @@ class QWElementNode extends QWNode {
     }
   }
 
-  //TODO: uncomment next build
-  /*public previousElementSiblings(): Array<QWElementNode> {
+  public previousElementSiblings(): Array<QWElementNode> {
     const siblings = new Array<QWElementNode>();
     const element = <Element>this.node;
     let sibling = element.previousElementSibling;
@@ -448,7 +446,7 @@ class QWElementNode extends QWNode {
       sibling = sibling.previousElementSibling;
     }
     return siblings;
-  }*/
+  }
 
   public nextElementSibling(): QWElementNode | null {
     const element = <Element>this.node;
@@ -459,8 +457,7 @@ class QWElementNode extends QWNode {
     }
   }
 
-  //TODO: uncomment next build
-  /*public nextElementSiblings(): Array<QWElementNode> {
+  public nextElementSiblings(): Array<QWElementNode> {
     const siblings = new Array<QWElementNode>();
     const element = <Element>this.node;
     let sibling = element.nextElementSibling;
@@ -469,7 +466,7 @@ class QWElementNode extends QWNode {
       sibling = sibling.nextElementSibling;
     }
     return siblings;
-  }*/
+  }
 
   public getNumberOfSiblingsWithTheSameTag(): number {
     const element = <Element>this.node;
@@ -534,10 +531,9 @@ class QWElementNode extends QWNode {
     return result;
   }
 
-  //TODO: uncomment next build
-  /*public getElementReferencedByHREF(): QWElementNode | null {
+  public getElementReferencedByHREF(): QWElementNode | null {
     return window.DomUtils.getElementReferencedByHREF(this);
-  }*/
+  }
 
   public getProperty(property: string): unknown {
     const element = <Element>this.node;

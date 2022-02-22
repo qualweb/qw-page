@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0-alpha5] - 22/2/2022
+
+
+### Added
+
+- new element methods
+
+### Updated
+
+- dependencies
+
 ## [0.3.0-alpha4] - 22/2/2022
 
 ### Updated

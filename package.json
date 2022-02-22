@@ -1,6 +1,6 @@
 {
   "name": "@qualweb/qw-page",
-  "version": "0.3.0-alpha4",
+  "version": "0.3.0-alpha5",
   "description": "Utilities module for qualweb",
   "main": "dist/qw-page.bundle.js",
   "files": [
@@ -34,7 +34,7 @@
   "license": "ISC",
   "devDependencies": {
     "@qualweb/dom": "0.2.4",
-    "@qualweb/types": "0.8.0-alpha8",
+    "@qualweb/types": "0.8.0-alpha10",
     "@tsconfig/recommended": "^1.0.1",
     "@typescript-eslint/eslint-plugin": "^4.28.5",
     "@typescript-eslint/parser": "^4.28.5",
