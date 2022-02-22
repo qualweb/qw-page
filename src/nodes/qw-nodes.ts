@@ -304,13 +304,13 @@ class QWElementNode extends QWNode {
   }
 
   public getParent(): QWElementNode | null {
-    const element = <Element>this.node;
+    /*const element = <Element>this.node;
     if (element.parentElement) {
       return this.convertToQWElementNode(element.parentElement);
     } else {
       return null;
-    }
-    /*const element = <Element>this.node;
+    }*/
+    const element = <Element>this.node;
     let parent = element.parentElement;
     if (!parent) {
       const context = element.getAttribute('_documentSelector');
@@ -322,7 +322,7 @@ class QWElementNode extends QWNode {
       return this.convertToQWElementNode(parent);
     } else {
       return null;
-    }*/
+    }
   }
 
   public hasParent(parentName: string): boolean {
@@ -389,6 +389,25 @@ class QWElementNode extends QWNode {
     return this.convertAllToQWElementNode(element.querySelectorAll(selector));
   }
 
+  //TODO: uncomment next build
+  /*public findVisible(selector: string): QWElementNode | null {
+    const elements = this.findAllVisible(selector);
+    return elements[0] ?? null;
+  }
+
+  public findAllVisible(selector: string): Array<QWElementNode> {
+    const element = <Element>this.node;
+
+    const elements = new Array<QWElementNode>();
+    for (const ele of this.convertAllToQWElementNode(element.querySelectorAll(selector))) {
+      if (ele.isVisible()) {
+        elements.push(ele);
+      }
+    }
+
+    return elements;
+  }*/
+
   public shadowFind(selector: string): QWElementNode | null {
     const element = <Element>this.node;
     const shadowRoot = element.shadowRoot;
@@ -419,6 +438,18 @@ class QWElementNode extends QWNode {
     }
   }
 
+  //TODO: uncomment next build
+  /*public previousElementSiblings(): Array<QWElementNode> {
+    const siblings = new Array<QWElementNode>();
+    const element = <Element>this.node;
+    let sibling = element.previousElementSibling;
+    while (sibling !== null) {
+      siblings.push(this.convertToQWElementNode(sibling));
+      sibling = sibling.previousElementSibling;
+    }
+    return siblings;
+  }*/
+
   public nextElementSibling(): QWElementNode | null {
     const element = <Element>this.node;
     if (element.nextElementSibling) {
@@ -427,6 +458,18 @@ class QWElementNode extends QWNode {
       return null;
     }
   }
+
+  //TODO: uncomment next build
+  /*public nextElementSiblings(): Array<QWElementNode> {
+    const siblings = new Array<QWElementNode>();
+    const element = <Element>this.node;
+    let sibling = element.nextElementSibling;
+    while (sibling !== null) {
+      siblings.push(this.convertToQWElementNode(sibling));
+      sibling = sibling.nextElementSibling;
+    }
+    return siblings;
+  }*/
 
   public getNumberOfSiblingsWithTheSameTag(): number {
     const element = <Element>this.node;
@@ -490,6 +533,11 @@ class QWElementNode extends QWNode {
 
     return result;
   }
+
+  //TODO: uncomment next build
+  /*public getElementReferencedByHREF(): QWElementNode | null {
+    return window.DomUtils.getElementReferencedByHREF(this);
+  }*/
 
   public getProperty(property: string): unknown {
     const element = <Element>this.node;
@@ -732,7 +780,11 @@ class QWElementNode extends QWNode {
   }
 
   public getAccessibleName(): string | undefined {
-    return window.AccessibilityUtils.getAccessibleName(this);
+    if (this.node instanceof SVGElement || this.isDescendantOf(['svg'], [])) {
+      return window.AccessibilityUtils.getAccessibleNameSVG(this);
+    } else {
+      return window.AccessibilityUtils.getAccessibleName(this);
+    }
   }
 
   public getAccessibleNameSVG(): string | undefined {
