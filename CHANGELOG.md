@@ -1,7 +1,12 @@
 # Changelog
 
-## [0.3.0-alpha5] - 22/2/2022
+## [0.3.0-alpha6] - 23/2/2022
 
+### Added
+
+- new node methods
+
+## [0.3.0-alpha5] - 22/2/2022
 
 ### Added
 

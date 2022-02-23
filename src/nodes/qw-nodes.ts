@@ -46,6 +46,19 @@ class QWNode {
     }
   }
 
+  public previousSiblings(): Array<QWNode> {
+    const siblings = new Array<QWNode>();
+
+    let sibling = this.previousSibling();
+
+    while (sibling) {
+      siblings.push(sibling);
+      sibling = sibling.previousSibling();
+    }
+
+    return siblings;
+  }
+
   public nextSibling(): QWNode | null {
     const sibling = this.node.nextSibling;
     if (sibling) {
@@ -53,6 +66,19 @@ class QWNode {
     } else {
       return null;
     }
+  }
+
+  public nextSiblings(): Array<QWNode> {
+    const siblings = new Array<QWNode>();
+
+    let sibling = this.nextSibling();
+
+    while (sibling) {
+      siblings.push(sibling);
+      sibling = sibling.nextSibling();
+    }
+
+    return siblings;
   }
 
   public getParentNode(): QWNode | null {
